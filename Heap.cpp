@@ -92,12 +92,14 @@ void* Heap::Alloc(size_t sz)
 void* Heap::ShortAlloc()
 {
 	void* alloc;
+	// check if there's free memory from previous memory release
 	if (lastReleasedShort)
 	{
 		*lastReleasedShort = USED_BLOCK;
 		alloc = lastReleasedShort;
 		lastReleasedShort = NULL;
 	}
+	// if there's not - find new free block
 	else
 	{
 		char* ptr = (char*)shortMap;
@@ -114,12 +116,14 @@ void* Heap::ShortAlloc()
 void* Heap::IntAlloc()
 {
 	void* alloc;
+	// check if there's free memory from previous memory release
 	if (lastReleasedInt)
 	{
 		*lastReleasedInt = USED_BLOCK;
 		alloc = lastReleasedInt;
 		lastReleasedInt = NULL;
 	}
+	// if there's not - find new free block
 	else
 	{
 		char* ptr = (char*)intMap;
@@ -136,12 +140,14 @@ void* Heap::IntAlloc()
 void* Heap::DoubleAlloc()
 {
 	void* alloc;
+	// check if there's free memory from previous memory release
 	if (lastReleasedDouble)
 	{
 		*lastReleasedDouble = USED_BLOCK;
 		alloc = lastReleasedDouble;
 		lastReleasedDouble = NULL;
 	}
+	// if there's not - find new free block
 	else
 	{
 		char* ptr = (char*)doubleMap;
@@ -159,6 +165,7 @@ void* Heap::HeapAlloc(size_t sz)
 {
 	BlockInfo* ptr = head;
 	size_t offset = 0;
+	// find free block with proper size
 	while (ptr)
 	{
 		if (!ptr->isBusy && ptr->size >= sz)
@@ -176,11 +183,12 @@ void* Heap::HeapAlloc(size_t sz)
 	{
 		return NULL;
 	}
-
+	//if size fit exactly - allocate memory 
 	if (ptr->size == sz)
 	{
 		ptr->isBusy = TRUE;
 	}
+	// allocate new service block and add it to servise list
 	else
 	{
 		BlockInfo* newBlock = (BlockInfo*)(malloc(sizeof(BlockInfo)));
@@ -237,7 +245,7 @@ void Heap::Dealloc(void* ptr)
 		size_t offset = (char*)ptr - heapBegin;
 		BlockInfo* ptr = head;
 		BlockInfo* temp;
-		
+		//find block to free
 		while (ptr && offset >= ptr->size)
 		{
 			offset -= ptr->size;
@@ -245,7 +253,7 @@ void Heap::Dealloc(void* ptr)
 		}
 
 		ptr->isBusy = FALSE;
-
+		// if previous block is free - merge it with current
 		if (ptr != head)
 		{
 			BlockInfo* prev = head;
@@ -262,7 +270,7 @@ void Heap::Dealloc(void* ptr)
 				prev->next = temp;
 			}
 		}
-
+		// if next block is free - merge it with current
 		if (ptr->next && !ptr->next->isBusy)
 		{										
 			temp = ptr->next->next;
